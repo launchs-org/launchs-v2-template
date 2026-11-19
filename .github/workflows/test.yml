@@ -1,0 +1,52 @@
+# プルリクエストで、**フォルダ単位で、変更のあったテンプレートだけ**を、本物のクラスター(docker の中の k3s)に展開して試験する。
+# 対象は scripts/changed-templates.sh が決める(templates/<id>/ の変更 → その id。harness/、scaffold/、Taskfile.yml の変更 → nginx と redis)。
+# 変更が無ければ、何もしない。検査(validate.yml)は、全てのテンプレートで、いつも行う。
+name: test
+
+on:
+  pull_request:
+    paths:
+      - "templates/**"
+      - "harness/**"
+      - "scaffold/**"
+      - "Taskfile.yml"
+      - "scripts/**"
+      - ".github/workflows/test.yml"
+
+jobs:
+  changed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # 基準のブランチとの分岐点が要るので、履歴を全て取る。
+          fetch-depth: 0
+          # 本体(harness/launchs)が要る。別の非公開リポジトリなので、読み取りの権限のある token を、secret LAUNCHS_TOKEN に入れる。
+          submodules: true
+          token: ${{ secrets.LAUNCHS_TOKEN || github.token }}
+
+      - name: 試験の対象を決める
+        id: changed
+        run: |
+          ids="$(scripts/changed-templates.sh "origin/${{ github.base_ref }}")"
+          echo "ids=$ids" >> "$GITHUB_OUTPUT"
+          echo "試験の対象: ${ids:-(なし)}"
+
+      - uses: go-task/setup-task@v1
+        if: steps.changed.outputs.ids != ''
+
+      - name: クラスターを作る
+        if: steps.changed.outputs.ids != ''
+        run: task setup cluster:up
+
+      - name: 試験する
+        if: steps.changed.outputs.ids != ''
+        run: task test -- ${{ steps.changed.outputs.ids }}
+
+      - name: 失敗したとき、クラスターの状態を残す
+        if: failure() && steps.changed.outputs.ids != ''
+        run: |
+          export KUBECONFIG="$PWD/.kube/config"
+          kubectl get pods -A || true
+          kubectl get events -A --sort-by=.lastTimestamp | tail -40 || true

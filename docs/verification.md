@@ -140,7 +140,12 @@ Traefik 経由の確認は、`curl -H 'Host: <id>.harness.localhost' http://loca
 - `task test -- <id>` の `PASS` の行(時間つき)。
 - 手で確認したこと(初回の設定ができた、など)を、一言。
 
-CI(`.github/workflows/validate.yml`)は、`validate` と `render` だけを自動で行う。実機の試験は、手元で行う(重く、イメージの取得に時間がかかるため)。
+CI は、2 つ動く。
+
+- `validate.yml`: **全てのテンプレート**を、`validate` と `render` で検査する(いつも)。
+- `test.yml`: **フォルダ単位で、変更のあったテンプレートだけ**を、docker の中の k3s で、実機の試験(`task test`)にかける。対象は `scripts/changed-templates.sh` が決める: `templates/<id>/` の下が変わった → その id。`harness/`、`scaffold/`、`Taskfile.yml` が変わった → 仕組みの確認として、nginx と redis。変更が無ければ、何もしない。手元でも、`task test:changed` で、同じ対象を試験できる。
+
+フォークからの PR は、secret(`LAUNCHS_TOKEN`)を使えないため、`test.yml` が、本体の取得に失敗することがある。その場合は、手元の `task test` の結果を、PR に貼る。
 
 ## 試験で分からないこと
 

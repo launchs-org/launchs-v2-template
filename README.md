@@ -39,6 +39,7 @@ task setup
 | `task render -- <id> [--set 名前=値]` | 本番と同じ展開コードで作られる、k8s のマニフェスト(YAML)を出す(クラスター不要) |
 | `task cluster:up` / `task cluster:down` | 試験用のクラスター(docker の中の k3s。Traefik 入り)を作る/消す |
 | `task test [-- <id>]` | クラスターに展開して、全ての Deployment が Ready になり、再起動せず、HTTP が返ることを確かめ、片付ける |
+| `task test:changed [基準]` | 基準(既定 `origin/main`)から、**変更のあったテンプレートだけ**を試験する(CI と同じ規則) |
 | `task test:keep -- <id>` | 同じことをして、namespace を残す(中を調べたいとき) |
 
 ## 試験が確かめること

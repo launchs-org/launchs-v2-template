@@ -101,6 +101,15 @@ tasks:
     cmds:
       - "{{.HARNESS}} test --root=../templates {{.CLI_ARGS}}"
 
+  test:changed:
+    desc: 基準のブランチ(既定 origin/main)から、変更のあったテンプレートだけを試験する。CI と同じ規則
+    vars:
+      IDS:
+        sh: scripts/changed-templates.sh {{.CLI_ARGS | default "origin/main"}}
+    cmds:
+      - 'echo "試験の対象: {{.IDS | default "(なし)"}}"'
+      - '{{if .IDS}}{{.HARNESS}} test --root=../templates {{.IDS}}{{else}}echo "変更のあるテンプレートは、ありません"{{end}}'
+
   test:keep:
     desc: test の後に、namespace を消さない(中を調べたいとき。`KUBECONFIG=.kube/config kubectl get all -A`)
     cmds:
