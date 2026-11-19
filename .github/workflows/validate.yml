@@ -1,0 +1,27 @@
+# プルリクエストで、全てのテンプレートを、本番と同じエンジンで検査し、計画とマニフェストが作れることを確かめる。
+# クラスターでの試験(task test)は重いので、ここでは行わない(手元で行い、結果を PR に貼る)。
+name: validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # 本体のコードが要る。
+          submodules: recursive
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27"
+          cache-dependency-path: harness/go.sum
+      - name: 検査
+        working-directory: harness
+        run: go run . validate --root=..
+      - name: マニフェストの作成
+        working-directory: harness
+        run: go run . render --root=.. > /dev/null

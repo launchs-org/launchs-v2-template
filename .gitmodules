@@ -1,0 +1,4 @@
+[submodule "launchs"]
+	path = launchs
+	url = https://github.com/launchs-org/v2
+	branch = develop

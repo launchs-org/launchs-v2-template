@@ -1,0 +1,75 @@
+# テンプレートの開発のコマンド(go-task)。Go は手元に入れなくてよい(コンテナの中で動かす)。
+# 使うもの: docker、kubectl、go-task、git、k3d(クラスターの試験をするとき。https://k3d.io)。
+version: "3"
+
+vars:
+  # harness を動かす Go のイメージ(本体の go.mod に合わせる)。
+  GO_IMAGE: golang:1.27
+  # k3d のクラスターの名前と、kubeconfig の置き場。
+  CLUSTER: launchs-templates
+  KUBECONFIG_FILE: "{{.ROOT_DIR}}/.kube/config"
+  # harness を、コンテナで動かすための、共通の docker run の頭(クラスターの API に届くよう、ホストのネットワークを使う)。
+  HARNESS: >-
+    docker run --rm --network host
+    -v harness-gomod:/go/pkg/mod
+    -v {{.ROOT_DIR}}:/work -w /work/harness
+    -e KUBECONFIG=/work/.kube/config
+    {{.GO_IMAGE}} go run -buildvcs=false .
+
+tasks:
+  setup:
+    desc: 本体(launchs/ の submodule)を取り込む。最初に 1 回。
+    cmds:
+      - git submodule update --init --recursive
+      - docker volume create harness-gomod >/dev/null
+
+  list:
+    desc: テンプレートの一覧
+    cmds:
+      - "{{.HARNESS}} list --root=.."
+
+  validate:
+    desc: 全てのテンプレートを、本番と同じエンジンで検査する(CLI_ARGS に id を指定すると、それだけ)
+    cmds:
+      - "{{.HARNESS}} validate --root=.. {{.CLI_ARGS}}"
+
+  plan:
+    desc: 計画(作られる資源)を出す。例 `task plan -- redash --set storage=1024`
+    cmds:
+      - "{{.HARNESS}} plan --root=.. {{.CLI_ARGS}}"
+
+  render:
+    desc: k8s のマニフェスト(YAML)を出す。クラスター不要。例 `task render -- redash`
+    cmds:
+      - "{{.HARNESS}} render --root=.. {{.CLI_ARGS}}"
+
+  cluster:up:
+    desc: 試験用の k3d のクラスターを作る(Traefik 入り。HTTP は localhost:8080)
+    status:
+      - k3d cluster list {{.CLUSTER}}
+    cmds:
+      - mkdir -p .kube
+      - k3d cluster create {{.CLUSTER}} --agents 1 --wait -p "8080:80@loadbalancer" --kubeconfig-update-default=false
+      - k3d kubeconfig get {{.CLUSTER}} > {{.KUBECONFIG_FILE}}
+      - KUBECONFIG={{.KUBECONFIG_FILE}} kubectl wait --for=condition=Available deployment/traefik -n kube-system --timeout=180s
+
+  cluster:down:
+    desc: 試験用のクラスターを消す
+    cmds:
+      - k3d cluster delete {{.CLUSTER}}
+      - rm -rf .kube
+
+  test:
+    desc: クラスターに展開して、Ready と HTTP を確かめる。例 `task test -- redash`(id が無ければ全て)
+    cmds:
+      - "{{.HARNESS}} test --root=.. {{.CLI_ARGS}}"
+
+  test:keep:
+    desc: test の後に、namespace を消さない(中を調べたいとき。`KUBECONFIG=.kube/config kubectl get all -A`)
+    cmds:
+      - "{{.HARNESS}} test --root=.. --keep {{.CLI_ARGS}}"
+
+  fmt:
+    desc: harness を整形する
+    cmds:
+      - docker run --rm -v {{.ROOT_DIR}}:/work -w /work/harness {{.GO_IMAGE}} gofmt -l -w .
