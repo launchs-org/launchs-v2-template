@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -82,6 +83,7 @@ func run(command string, arguments []string) error {
 	traefikAPIVersion := flagSet.String("traefik-api-version", "traefik.io/v1alpha1", "IngressRoute の apiVersion")
 	version := flagSet.String("version", "", "版(x.y.z)。空なら既定の版、all なら全ての版")
 	keep := flagSet.Bool("keep", false, "test の後に、namespace を消さない")
+	parallel := flagSet.Int("parallel", 3, "同時に試験するテンプレートの数(test 用)")
 	settle := flagSet.Duration("settle", 15*time.Second, "Ready の後に、再起動が無いかを見守る時間")
 	// オプションと id が混ざっていてもよい(例: redash --version all)。id を取り出しては、残りを、またオプションとして読む。
 	identifiers := []string{}
@@ -156,7 +158,7 @@ func run(command string, arguments []string) error {
 		return nil
 	case "test":
 		// 本物のクラスターで試験する。
-		return runTests(selected, *root, overrides, settings, *kubeconfig, *kubeContext, *keep, *settle)
+		return runTests(selected, *root, overrides, settings, *kubeconfig, *kubeContext, *keep, *settle, *parallel)
 	}
 	return fmt.Errorf("知らないコマンドです: %s", command)
 }
@@ -178,10 +180,11 @@ func run(command string, arguments []string) error {
 //   - kubeContext: kubeconfig の context。
 //   - keep: 終わっても片付けないか。
 //   - settle: Ready の後に見守る時間。
+//   - parallel: 同時に試験する数。
 //
 // 戻り値:
 //   - 1 つでも失敗したら、その一覧を含むエラー。
-func runTests(selected []template.Template, root string, overrides setFlags, settings runnerSettings, kubeconfigPath string, kubeContext string, keep bool, settle time.Duration) error {
+func runTests(selected []template.Template, root string, overrides setFlags, settings runnerSettings, kubeconfigPath string, kubeContext string, keep bool, settle time.Duration, parallel int) error {
 	// クラスターにつなぐ。
 	clientset, dynamicClient, connectError := connectCluster(kubeconfigPath, kubeContext)
 	if connectError != nil {
@@ -196,18 +199,32 @@ func runTests(selected []template.Template, root string, overrides setFlags, set
 	if runnerError != nil {
 		return runnerError
 	}
+	// 並列に試験する(parallel 個まで同時)。結果の表示は、混ざらないよう、排他する。
 	failures := []string{}
+	var lock sync.Mutex
+	var group sync.WaitGroup
+	slots := make(chan struct{}, max(parallel, 1))
 	for _, entry := range selected {
-		started := time.Now()
-		// 1 つ試験して、結果を出す。
-		testError := testOne(entry, root, overrides, target, clientset, settle, keep)
-		if testError != nil {
-			fmt.Printf("FAIL %s %s (%s)\n%s\n", entry.Metadata.ID, entry.Metadata.Version, time.Since(started).Round(time.Second), testError)
-			failures = append(failures, entry.Metadata.ID+" "+entry.Metadata.Version)
-			continue
-		}
-		fmt.Printf("PASS %s %s (%s)\n", entry.Metadata.ID, entry.Metadata.Version, time.Since(started).Round(time.Second))
+		group.Add(1)
+		slots <- struct{}{}
+		go func(entry template.Template) {
+			defer group.Done()
+			defer func() { <-slots }()
+			started := time.Now()
+			// 1 つ試験する。
+			testError := testOne(entry, root, overrides, target, clientset, settle, keep)
+			// 結果を出す。
+			lock.Lock()
+			defer lock.Unlock()
+			if testError != nil {
+				fmt.Printf("FAIL %s %s (%s)\n%s\n", entry.Metadata.ID, entry.Metadata.Version, time.Since(started).Round(time.Second), testError)
+				failures = append(failures, entry.Metadata.ID+" "+entry.Metadata.Version)
+				return
+			}
+			fmt.Printf("PASS %s %s (%s)\n", entry.Metadata.ID, entry.Metadata.Version, time.Since(started).Round(time.Second))
+		}(entry)
 	}
+	group.Wait()
 	if len(failures) > 0 {
 		return fmt.Errorf("失敗したテンプレート: %s", strings.Join(failures, ", "))
 	}

@@ -12,7 +12,7 @@ vars:
   # harness を、コンテナで動かすための、共通の docker run の頭(クラスターの API に届くよう、ホストのネットワークを使う)。
   HARNESS: >-
     docker run --rm --network host
-    -v harness-gomod:/go/pkg/mod
+    -v harness-gomod:/go/pkg/mod -v harness-gocache:/root/.cache/go-build
     -v {{.ROOT_DIR}}:/work -w /work/harness
     -e KUBECONFIG=/work/.kube/config
     {{.GO_IMAGE}} go run -buildvcs=false .
@@ -23,6 +23,7 @@ tasks:
     cmds:
       - git submodule update --init harness/launchs
       - docker volume create harness-gomod >/dev/null
+      - docker volume create harness-gocache >/dev/null
 
   new:
     desc: 雛形(scaffold/)から、新しいテンプレートを作る。例 `task new -- myapp`

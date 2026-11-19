@@ -86,7 +86,7 @@ docker の中で、k3s(軽い Kubernetes。Traefik 入り)を動かす。k3d な
 ```
 task test -- redash          # 1 つ
 task test -- redash gitea    # 複数
-task test                    # 全て(30 分ほどかかる)
+task test                    # 全て(既定で 3 つずつ同時に試験する。--parallel N で変更。10 分ほど)
 task test -- redash --version all   # 全ての版
 ```
 
