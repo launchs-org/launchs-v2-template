@@ -83,14 +83,24 @@ func run(command string, arguments []string) error {
 	version := flagSet.String("version", "", "版(x.y.z)。空なら既定の版、all なら全ての版")
 	keep := flagSet.Bool("keep", false, "test の後に、namespace を消さない")
 	settle := flagSet.Duration("settle", 15*time.Second, "Ready の後に、再起動が無いかを見守る時間")
-	flagSet.Parse(arguments)
+	// オプションと id が混ざっていてもよい(例: redash --version all)。id を取り出しては、残りを、またオプションとして読む。
+	identifiers := []string{}
+	remaining := arguments
+	for {
+		flagSet.Parse(remaining)
+		if flagSet.NArg() == 0 {
+			break
+		}
+		identifiers = append(identifiers, flagSet.Arg(0))
+		remaining = flagSet.Args()[1:]
+	}
 	// テンプレートを読み込んで、検査する。
 	registry, loadError := loadRegistry(*root)
 	if loadError != nil {
 		return loadError
 	}
 	// 指定された id を選ぶ。
-	selected, selectError := selectTemplates(registry, flagSet.Args(), *version)
+	selected, selectError := selectTemplates(registry, identifiers, *version)
 	if selectError != nil {
 		return selectError
 	}

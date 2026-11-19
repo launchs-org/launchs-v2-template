@@ -98,3 +98,7 @@ git add harness/launchs && git commit
 - コマンド: `main.go` の `run` の `switch` に足す。
 - 展開の確認(例: ログの内容、特定のポートの TCP 接続): `cluster.go` に関数を足し、`main.go` の `testOne` から呼ぶ。
 - 関数と、関数の中の行には、日本語のコメントを書く(本体の `docs/coding-conventions.md` に合わせる)。
+
+## 注意: 本体の版(submodule)
+
+`harness/launchs/` は、版つきのテンプレートに対応した本体のコミット(本体の `feature/templates-submodule`)を指している。**本体の PR が `develop` に入ったら**、`git -C harness/launchs fetch && git -C harness/launchs checkout origin/develop` で、`develop` に付け替えて、コミットする(それまで、`git submodule update --remote` は、使わない。古いエンジンに戻ってしまう)。
