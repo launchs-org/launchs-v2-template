@@ -3,4 +3,4 @@ id: cloudbeaver
 name: CloudBeaver(データベース管理)
 description: ブラウザで、データベースの中身を見たり、SQL を書いたりできます。PostgreSQL、MySQL、MariaDB など、たくさんの種類につなげます。
 icon: database
-category: tool
+category: dev

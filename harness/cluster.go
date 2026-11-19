@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"sort"
@@ -9,6 +10,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -259,6 +261,11 @@ func checkHTTP(requestContext context.Context, clientset kubernetes.Interface, n
 			result := clientset.CoreV1().RESTClient().Get().Namespace(namespaceName).Resource("services").Name(fmt.Sprintf("http:%s:%d", rule.ServiceName, rule.Port)).SubResource("proxy").Suffix(path).Do(requestContext)
 			result.StatusCode(&status)
 			body, doError := result.Raw()
+			// アプリが 401 や 403 などを返すと、proxy は、それを、API のエラーとして返す。その場合は、エラーの中のステータスを使う。
+			var statusError apierrors.APIStatus
+			if status == 0 && errors.As(doError, &statusError) {
+				status = int(statusError.Status().Code)
+			}
 			response := body
 			if status > 0 && statusAccepted(settings, status) {
 				break
