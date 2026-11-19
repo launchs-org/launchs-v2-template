@@ -1,0 +1,9 @@
+# コンテナ(deploy)。
+deploys:
+  - name: cloudbeaver
+    image: dbeaver/cloudbeaver:latest
+    spec: large
+    replicas: 1
+    mounts:
+      - volume: workspace
+        path: /opt/cloudbeaver/workspace

@@ -1,0 +1,6 @@
+# テンプレートの、版によらない情報(画面に出す名前、説明、アイコン、分類)。
+id: memos
+name: Memos(メモ)
+description: 思いついたことを、すぐ書き留められる、シンプルなメモです。タグや検索もあります。
+icon: note
+category: tool

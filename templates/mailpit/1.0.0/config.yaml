@@ -1,0 +1,18 @@
+# 利用者が入れる値(variables)と、作成後の案内(notes)。
+notes: |
+  1. 公開 URL を開いて、ユーザー名 admin と、「作成した値」のパスワードで、ログインします。受け取ったメールが、一覧に出ます。
+  2. メールを送るアプリには、SMTP サーバーとして、Mailpit の Service の DNS 名(デプロイの「Service」タブ)と、ポート 1025 を設定します。同じプロジェクトのアプリだけが、使えます。認証と暗号化は、要りません。
+  メールは、本物の宛先には、届きません(ここで受け取るだけです)。
+
+variables:
+  - name: password
+    label: 画面のパスワード(ユーザー名は admin)
+    type: password
+    generate: true
+    length: 20
+  - name: storage
+    label: データの大きさ(MB)
+    type: integer
+    default: "512"
+    min: 128
+    max: 5120

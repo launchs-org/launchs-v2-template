@@ -1,0 +1,6 @@
+# テンプレートの、版によらない情報(画面に出す名前、説明、アイコン、分類)。
+id: code-server
+name: code-server(VS Code)
+description: ブラウザで使える VS Code。パスワードで保護され、作業フォルダはボリュームに保存されます。
+icon: code
+category: tool

@@ -1,0 +1,6 @@
+# テンプレートの、版によらない情報(画面に出す名前、説明、アイコン、分類)。
+id: nginx
+name: nginx(静的なページ)
+description: nginx で、簡単なページを公開します。設定ファイルとページは、ConfigMap で管理され、あとから編集できます。
+icon: globe
+category: web

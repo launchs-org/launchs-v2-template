@@ -1,0 +1,10 @@
+# 共有の設定ファイル(ConfigMap)。
+configmaps:
+  - name: site
+    files:
+      - key: default.conf       # フォルダのファイルを読む(text は ${...} を展開する)
+        from: files/default.conf
+      - key: index.html
+        from: files/index.html
+      - key: favicon.gif        # バイナリは、自動で判定して、そのまま渡す(base64 を手で書かない)
+        from: files/favicon.gif

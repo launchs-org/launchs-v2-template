@@ -1,0 +1,14 @@
+# コンテナ(deploy)。
+deploys:
+  - name: gitea
+    image: gitea/gitea:latest
+    spec: medium
+    replicas: 1
+    env:
+      GITEA__database__DB_TYPE: sqlite3
+      GITEA__server__DISABLE_SSH: "true"
+      GITEA__server__START_SSH_SERVER: "false"
+      GITEA__service__DISABLE_REGISTRATION: "false"
+    mounts:
+      - volume: data
+        path: /data

@@ -1,0 +1,40 @@
+# 利用者が入れる値(variables)と、作成後の案内(notes)。
+variables:
+  - name: database
+    label: データベース名
+    type: string
+    default: app
+    pattern: "^[a-z][a-z0-9_]{0,30}$"
+  - name: user
+    label: ユーザー名
+    type: string
+    default: app
+    pattern: "^[a-z][a-z0-9_]{0,30}$"
+  - name: password
+    label: パスワード
+    type: password
+    generate: true
+    length: 24
+  - name: storage
+    label: ボリュームの大きさ(MB)
+    type: integer
+    default: "1024"
+    min: 256
+    max: 5120
+  - name: max_connections
+    label: 最大の接続数
+    type: integer
+    default: "100"
+    min: 20
+    max: 500
+  - name: log_statement
+    label: SQL のログ
+    type: choice
+    default: none
+    options:
+      - value: none
+        label: 出さない
+      - value: ddl
+        label: 定義の変更だけ
+      - value: all
+        label: 全て

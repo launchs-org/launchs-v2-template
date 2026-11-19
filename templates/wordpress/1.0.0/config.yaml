@@ -1,0 +1,19 @@
+# 利用者が入れる値(variables)と、作成後の案内(notes)。
+variables:
+  - name: db_password
+    label: データベースのパスワード
+    type: password
+    generate: true
+    length: 24
+  - name: db_storage
+    label: データベースの大きさ(MB)
+    type: integer
+    default: "1024"
+    min: 256
+    max: 5120
+  - name: content_storage
+    label: アップロードの置き場の大きさ(MB)
+    type: integer
+    default: "1024"
+    min: 256
+    max: 5120

@@ -1,0 +1,11 @@
+# テンプレートの、版によらない情報。`task new -- <id>` で、templates/<id>/ にコピーされる(__ID__ が id に置き換わる)。
+# id は、フォルダの名前と同じにする(英小文字・数字・ハイフン)。
+id: __ID__
+# 画面に出す名前と、1〜2 文の説明(利用者向け。専門用語を避ける)。
+name: __ID__
+description: ここに、何ができるテンプレートかを書きます。
+# icon: globe / database / git / chart など。category: database / web / cache / tool / monitoring / dev。
+icon: globe
+category: web
+# 既定で使う版(省略すると、いちばん新しい版)。
+# latest: 1.0.0

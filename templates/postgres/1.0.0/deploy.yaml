@@ -1,0 +1,22 @@
+# コンテナ(deploy)。
+deploys:
+  - name: db
+    image: postgres:16
+    spec: medium
+    replicas: 1
+    args: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+    env:
+      POSTGRES_DB: ${database}
+      POSTGRES_USER: ${user}
+      POSTGRES_PASSWORD: ${password}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    mounts:
+      - volume: data
+        path: /var/lib/postgresql/data
+    configmaps:
+      - configmap: pgconf
+        key: postgresql.conf
+        path: /etc/postgresql/postgresql.conf
+    files:
+      - path: /docker-entrypoint-initdb.d/init.sql
+        from: files/init.sql

@@ -1,0 +1,6 @@
+# テンプレートの、版によらない情報(画面に出す名前、説明、アイコン、分類)。
+id: grafana
+name: Grafana(グラフの画面)
+description: データベースや監視のデータを、グラフにして見られます。ダッシュボードを作って、共有できます。
+icon: chart
+category: monitoring

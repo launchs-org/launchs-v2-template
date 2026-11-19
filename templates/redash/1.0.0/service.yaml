@@ -1,0 +1,17 @@
+# deploy に付ける Service(クラスター内の入口。他の deploy から、DNS 名で呼べる)。
+services:
+  - deploy: db
+    ports:
+      - name: postgres
+        port: 5432
+        protocol: tcp
+  - deploy: redis
+    ports:
+      - name: redis
+        port: 6379
+        protocol: tcp
+  - deploy: server
+    ports:
+      - name: http
+        port: 5000
+        protocol: tcp

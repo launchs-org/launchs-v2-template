@@ -1,0 +1,6 @@
+# 共有の設定ファイル(ConfigMap)。
+configmaps:
+  - name: pgconf
+    files:
+      - key: postgresql.conf
+        from: files/postgresql.conf

@@ -2,7 +2,7 @@
 //
 // コマンド:
 //   - list: テンプレートの一覧。
-//   - validate [id…]: 読み込みと検査、計画の作成(クラスターは使わない)。
+//   - validate [id…]: 読み込みと検査(--version で版を指定。all なら全ての版)、計画の作成(クラスターは使わない)。
 //   - plan <id> [--set 名前=値]: 計画(作られる資源)を JSON で出す。
 //   - render <id> [--set 名前=値]: k8s のマニフェスト(YAML)を出す(クラスターは使わない)。
 //   - test [id…] [--keep]: クラスターに展開し、Ready と HTTP を確かめて、片付ける。
@@ -71,7 +71,7 @@ func (flags setFlags) Set(text string) error {
 func run(command string, arguments []string) error {
 	// 共通のオプションを定義する。
 	flagSet := flag.NewFlagSet(command, flag.ExitOnError)
-	root := flagSet.String("root", "..", "テンプレートのリポジトリのフォルダ")
+	root := flagSet.String("root", "../templates", "テンプレートを置いたフォルダ(<id>/template.yaml を持つフォルダが並ぶところ)")
 	overrides := setFlags{}
 	flagSet.Var(overrides, "set", "変数の値(名前=値。何度でも指定できる)")
 	kubeconfig := flagSet.String("kubeconfig", "", "kubeconfig のパス(test 用)")
@@ -80,6 +80,7 @@ func run(command string, arguments []string) error {
 	accessMode := flagSet.String("access-mode", "ReadWriteOnce", "PVC のアクセスモード")
 	ingressNamespace := flagSet.String("ingress-namespace", "kube-system", "外からの通信を中継する namespace(k3s の Traefik は kube-system)")
 	traefikAPIVersion := flagSet.String("traefik-api-version", "traefik.io/v1alpha1", "IngressRoute の apiVersion")
+	version := flagSet.String("version", "", "版(x.y.z)。空なら既定の版、all なら全ての版")
 	keep := flagSet.Bool("keep", false, "test の後に、namespace を消さない")
 	settle := flagSet.Duration("settle", 15*time.Second, "Ready の後に、再起動が無いかを見守る時間")
 	flagSet.Parse(arguments)
@@ -89,7 +90,7 @@ func run(command string, arguments []string) error {
 		return loadError
 	}
 	// 指定された id を選ぶ。
-	selected, selectError := selectTemplates(registry, flagSet.Args())
+	selected, selectError := selectTemplates(registry, flagSet.Args(), *version)
 	if selectError != nil {
 		return selectError
 	}
@@ -98,7 +99,7 @@ func run(command string, arguments []string) error {
 	case "list":
 		// 一覧を出す。
 		for _, entry := range selected {
-			fmt.Printf("%-14s %-12s %s\n", entry.Metadata.ID, entry.Metadata.Category, entry.Metadata.Name)
+			fmt.Printf("%-14s %-8s %-12s %s  (版: %s)\n", entry.Metadata.ID, entry.Metadata.Version, entry.Metadata.Category, entry.Metadata.Name, strings.Join(entry.Metadata.Versions, ", "))
 		}
 		return nil
 	case "validate":
@@ -107,7 +108,7 @@ func run(command string, arguments []string) error {
 			if _, _, planError := buildPlan(entry, overrides, "harness"); planError != nil {
 				return fmt.Errorf("%s: %w", entry.Metadata.ID, planError)
 			}
-			fmt.Printf("OK  %s\n", entry.Metadata.ID)
+			fmt.Printf("OK  %s %s\n", entry.Metadata.ID, entry.Metadata.Version)
 		}
 		return nil
 	case "plan":
@@ -137,7 +138,7 @@ func run(command string, arguments []string) error {
 			if _, applyError := target.apply(context.Background(), plan, namespaceName); applyError != nil {
 				return applyError
 			}
-			fmt.Printf("# ===== %s =====\n", entry.Metadata.ID)
+			fmt.Printf("# ===== %s %s =====\n", entry.Metadata.ID, entry.Metadata.Version)
 			if dumpError := dumpManifests(context.Background(), clientset, dynamicClient, settings.TraefikAPIVersion, namespaceName, os.Stdout); dumpError != nil {
 				return dumpError
 			}
@@ -191,11 +192,11 @@ func runTests(selected []template.Template, root string, overrides setFlags, set
 		// 1 つ試験して、結果を出す。
 		testError := testOne(entry, root, overrides, target, clientset, settle, keep)
 		if testError != nil {
-			fmt.Printf("FAIL %s (%s)\n%s\n", entry.Metadata.ID, time.Since(started).Round(time.Second), testError)
-			failures = append(failures, entry.Metadata.ID)
+			fmt.Printf("FAIL %s %s (%s)\n%s\n", entry.Metadata.ID, entry.Metadata.Version, time.Since(started).Round(time.Second), testError)
+			failures = append(failures, entry.Metadata.ID+" "+entry.Metadata.Version)
 			continue
 		}
-		fmt.Printf("PASS %s (%s)\n", entry.Metadata.ID, time.Since(started).Round(time.Second))
+		fmt.Printf("PASS %s %s (%s)\n", entry.Metadata.ID, entry.Metadata.Version, time.Since(started).Round(time.Second))
 	}
 	if len(failures) > 0 {
 		return fmt.Errorf("失敗したテンプレート: %s", strings.Join(failures, ", "))
@@ -221,13 +222,13 @@ func testOne(entry template.Template, root string, overrides setFlags, target *r
 	if !keep {
 		defer clientset.CoreV1().Namespaces().Delete(requestContext, namespaceName, metav1.DeleteOptions{})
 	}
-	fmt.Printf("---- %s: namespace %s\n", entry.Metadata.ID, namespaceName)
+	fmt.Printf("---- %s %s: namespace %s\n", entry.Metadata.ID, entry.Metadata.Version, namespaceName)
 	// 展開する。
 	routes, applyError := target.apply(requestContext, plan, namespaceName)
 	if applyError != nil {
 		return applyError
 	}
-	smoke, smokeError := loadSmokeSettings(root, entry.Metadata.ID)
+	smoke, smokeError := loadSmokeSettings(root, entry.Metadata.ID, entry.Metadata.Version)
 	if smokeError != nil {
 		return smokeError
 	}

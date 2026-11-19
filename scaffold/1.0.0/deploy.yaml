@@ -1,0 +1,15 @@
+# コンテナ(deploy)。イメージは、版を固定する(latest は避ける)。spec は small / medium / large。
+# 非 root のイメージで、ボリュームに書けないときは、fsGroup を指定する(例: fsGroup: 1000)。
+# env: で環境変数、command: / args: で起動コマンド、configmaps: で configmaps.yaml の設定をマウントできる。
+deploys:
+  - name: app
+    image: nginx:1.27
+    spec: small
+    replicas: 1
+    mounts:
+      - volume: data
+        path: /usr/share/nginx/html
+    # テンプレートに同梱するファイルを、コンテナの中に置く(from: は、この版のフォルダからの相対パス)。
+    files:
+      - path: /etc/nginx/conf.d/default.conf
+        from: files/default.conf

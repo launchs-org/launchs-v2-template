@@ -1,0 +1,6 @@
+# テンプレートの、版によらない情報(画面に出す名前、説明、アイコン、分類)。
+id: wordpress
+name: WordPress
+description: ブログ・サイトを作れる WordPress。データベース(MariaDB)と、アップロードしたファイルは、ボリュームに保存されます。
+icon: globe
+category: web

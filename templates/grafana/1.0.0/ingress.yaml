@@ -1,0 +1,5 @@
+# インターネットへの公開(HTTP だけ)。
+rules:
+  - path: /
+    deploy: grafana
+    port: 3000

@@ -1,0 +1,23 @@
+# 利用者が入れる値(variables)と、作成後の案内(notes)。
+variables:
+  - name: database
+    label: データベース名
+    type: string
+    default: app
+    pattern: "^[a-z][a-z0-9_]{0,30}$"
+  - name: user
+    label: ユーザー名
+    type: string
+    default: app
+    pattern: "^[a-z][a-z0-9_]{0,30}$"
+  - name: password
+    label: パスワード
+    type: password
+    generate: true
+    length: 24
+  - name: storage
+    label: ボリュームの大きさ(MB)
+    type: integer
+    default: "1024"
+    min: 256
+    max: 5120

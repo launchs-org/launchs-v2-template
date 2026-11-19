@@ -1,0 +1,15 @@
+# コンテナ(deploy)。
+deploys:
+  - name: grafana
+    image: grafana/grafana-oss:latest
+    spec: medium
+    replicas: 1
+    # イメージは、ユーザー 472 で動く。ボリュームに書けるよう、所有グループを 472 にする。
+    fsGroup: 472
+    env:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${password}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    mounts:
+      - volume: data
+        path: /var/lib/grafana

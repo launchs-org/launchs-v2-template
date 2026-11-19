@@ -1,0 +1,11 @@
+# コンテナ(deploy)。
+deploys:
+  - name: vault
+    image: vaultwarden/server:latest
+    spec: small
+    replicas: 1
+    env:
+      SIGNUPS_ALLOWED: ${signups_allowed}
+    mounts:
+      - volume: data
+        path: /data

@@ -1,0 +1,13 @@
+# 利用者が入れる値(variables)と、作成後の案内(notes)。
+variables:
+  - name: password
+    label: パスワード
+    type: password
+    generate: true
+    length: 24
+  - name: storage
+    label: ボリュームの大きさ(MB)
+    type: integer
+    default: "512"
+    min: 128
+    max: 5120

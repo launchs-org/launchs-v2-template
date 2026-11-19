@@ -14,14 +14,21 @@ jobs:
       - uses: actions/checkout@v4
         with:
           # 本体のコードが要る。
-          submodules: recursive
+          # 本体(harness/launchs)が要る。別の非公開リポジトリなので、読み取りの権限のある token を、secret LAUNCHS_TOKEN に入れる(無ければ、既定の token)。
+          submodules: true
+          token: ${{ secrets.LAUNCHS_TOKEN || github.token }}
       - uses: actions/setup-go@v5
         with:
           go-version: "1.27"
           cache-dependency-path: harness/go.sum
       - name: 検査
         working-directory: harness
-        run: go run . validate --root=..
+        run: go run . validate --root=../templates
       - name: マニフェストの作成
         working-directory: harness
-        run: go run . render --root=.. > /dev/null
+        run: go run . render --root=../templates > /dev/null
+      - name: 雛形(scaffold)が、そのまま通ること
+        run: |
+          cp -r scaffold templates/scaffold-check
+          sed -i 's/__ID__/scaffold-check/g' templates/scaffold-check/manifest.yaml templates/scaffold-check/README.md
+          cd harness && go run . validate --root=../templates scaffold-check

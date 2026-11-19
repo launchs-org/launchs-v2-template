@@ -1,0 +1,28 @@
+# 利用者が入れる値(variables)と、作成後の案内(notes)。
+variables:
+  - name: password
+    label: ログインのパスワード
+    type: password
+    generate: true
+    length: 24
+  - name: storage
+    label: 作業フォルダの大きさ(MB)
+    type: integer
+    default: "2048"
+    min: 512
+    max: 5120
+  - name: theme
+    label: テーマ
+    type: choice
+    default: Default Dark Modern
+    options:
+      - value: Default Dark Modern
+        label: ダーク
+      - value: Default Light Modern
+        label: ライト
+  - name: font_size
+    label: 文字の大きさ
+    type: integer
+    default: "14"
+    min: 8
+    max: 32

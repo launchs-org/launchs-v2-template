@@ -1,16 +1,43 @@
 // Package templates は、このシステムに同梱する、テンプレート(フォルダ形式)を、バイナリに埋め込んで公開する。
 //
-// テンプレートは、1 つにつき 1 つのフォルダ(<id>/template.yaml と、from: で読み込むファイル <id>/files/…)。
-// 追加するときは、このリポジトリの直下に、metadata.id と同じ名前のフォルダを作る。読み込みと検証は、launchs の shared/template が行う。
-// 埋め込みにしているのは、イメージに含め忘れない(ファイルが、実行時に、無いことが起きない)ためと、利用者が定義を変えられないため。
+// テンプレートは、templates/<id>/ に、1 つにつき 1 つのフォルダ:
 //
-// このリポジトリは、launchs 本体に、サブモジュール(templates/)として取り込まれる。本体の中では、このフォルダが、パッケージ launchs/templates になる。
-// 試験の道具(harness/)は、別の Go モジュールで、埋め込みの対象ではない。
+//	manifest.yaml            名前、説明、アイコン、分類、既定の版
+//	README.md                説明の文書
+//	<x.y.z>/config.yaml      変数と、作成後の案内
+//	<x.y.z>/volumes.yaml, configmaps.yaml, deploy.yaml, service.yaml, ingress.yaml
+//	<x.y.z>/files/…          from: で読み込むファイル
+//
+// このリポジトリは、launchs 本体に、submodule(templates/)として取り込まれ、本体が、この Files を使う。
+// harness/(別の Go モジュール)と、scaffold/(新しいテンプレートの雛形)は、埋め込まれない。
 package templates
 
-import "embed"
+import (
+	"embed"
+	"io/fs"
+)
 
-// Files は、同梱のテンプレート(<id>/template.yaml と <id>/files/…)。テンプレートのフォルダだけを埋め込む(harness/ や docs/ は含めない)。
+// embedded は、templates/ の下の、テンプレートの定義と、読み込むファイルだけ。
 //
-//go:embed */template.yaml */files
-var Files embed.FS
+//go:embed templates/*/manifest.yaml templates/*/README.md templates/*/*/*.yaml templates/*/*/files
+var embedded embed.FS
+
+// Files は、同梱のテンプレート。<id>/manifest.yaml、<id>/<版>/… の形(templates/ の接頭辞は、外してある)。
+var Files = mustSub(embedded, "templates")
+
+// mustSub は、埋め込んだファイルシステムの、サブフォルダを返す。
+//
+// 引数:
+//   - source: 埋め込んだファイルシステム。
+//   - folder: 取り出すフォルダ。
+//
+// 戻り値:
+//   - folder を根にしたファイルシステム。フォルダが無いとき(埋め込みが壊れているとき)は、起動時に panic する。
+func mustSub(source fs.FS, folder string) fs.FS {
+	// サブフォルダを取り出す。
+	sub, subError := fs.Sub(source, folder)
+	if subError != nil {
+		panic(subError)
+	}
+	return sub
+}

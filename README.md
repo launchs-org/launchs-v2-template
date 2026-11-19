@@ -2,12 +2,14 @@
 
 launchs のテンプレート(よく使う構成を、変数を埋めるだけで、まとめて作る)と、それを**手元で試験する環境**。
 
-- テンプレート: 1 つにつき 1 つのフォルダ(`<id>/template.yaml` と、`from:` で読み込む `<id>/files/`)。
+- `templates/`: テンプレート。1 つにつき 1 つのフォルダ(`manifest.yaml`、`README.md`、版のフォルダ `1.0.0/`(`config.yaml`、`deploy.yaml` など種類ごとのファイルと `files/`))。構成の詳細は [docs/structure.md](docs/structure.md)。
 - `harness/`: 本体(launchs)と**同じエンジン**で検査し、**同じ k8s の展開のコード**で、クラスターに展開して試験する道具。
-- `launchs/`: 本体の submodule。harness が、本体のコードを、そのまま使うために置く。
+- `scaffold/`: 新しいテンプレートの雛形(`task new -- <id>` で、`templates/<id>/` にコピーされる)。
+- `harness/launchs/`: 本体の submodule。harness が、本体のコードを、そのまま使うために置く。
 
 詳しいドキュメント:
 
+- [フォルダの構成と書き方](docs/structure.md): manifest.yaml、版、種類ごとのファイル。
 - [検証方法](docs/verification.md): 何を、どの順で、どこまで確かめるか。PR の前の確認。
 - [harness の仕組み](docs/harness.md): 本体のコードのどこを使い、何を置き換えているか。本番との違い。
 - [うまくいかないとき](docs/troubleshooting.md)
@@ -31,6 +33,7 @@ task setup
 
 | コマンド | 内容 |
 | --- | --- |
+| `task new -- <id>` | 雛形(`scaffold/`)から、`templates/<id>/` を作る |
 | `task validate [-- <id>]` | 本番と同じエンジンで、書式・変数・参照・計画を検査する(数秒。クラスター不要) |
 | `task plan -- <id> [--set 名前=値]` | 変数を埋めて、作られる資源の計画を出す |
 | `task render -- <id> [--set 名前=値]` | 本番と同じ展開コードで作られる、k8s のマニフェスト(YAML)を出す(クラスター不要) |
@@ -45,7 +48,7 @@ task setup
 3. **起動**: 全ての Deployment が Ready になる。その後 15 秒、Pod が再起動(クラッシュの繰り返し)しない。
 4. **応答**: ingress の向き先に、API サーバーの proxy 経由で HTTP を送り、500 未満の応答(認証の 401 や、移動の 302 も、動いている印)が返る。
 
-テンプレートごとの調整は、`<id>/smoke.yaml`(無くてよい):
+テンプレートごとの調整は、`templates/<id>/smoke.yaml`(無くてよい):
 
 ```yaml
 path: /login          # 確かめるパス(既定は ingress のルールのパス)
@@ -61,4 +64,4 @@ timeoutSeconds: 300   # 起動を待つ秒数(既定 300)
 
 ## 本体を更新するとき
 
-`launchs/` は、本体の `develop` を指す。本体のエンジンが変わったら、`git submodule update --remote launchs` で、新しくする。
+`harness/launchs/` は、本体の `develop` を指す。本体のエンジンが変わったら、`git submodule update --remote harness/launchs` で、新しくする。

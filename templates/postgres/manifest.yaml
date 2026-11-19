@@ -1,0 +1,6 @@
+# テンプレートの、版によらない情報(画面に出す名前、説明、アイコン、分類)。
+id: postgres
+name: PostgreSQL
+description: データベース(PostgreSQL 16)。データはボリュームに保存され、設定ファイルは ConfigMap で編集できます。
+icon: database
+category: database

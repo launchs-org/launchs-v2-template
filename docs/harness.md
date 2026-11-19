@@ -7,7 +7,7 @@
 テンプレートは、本体の中で、次の順に処理される。
 
 ```
-template.yaml → 検査 → 変数を埋める → 計画 → (DB に記録)→ k8s の資源
+manifest.yaml と版のフォルダ → 検査 → 変数を埋める → 計画 → (DB に記録)→ k8s の資源
 ```
 
 本体を動かさずに、同じ結果を、手元で得たい。そのため、本体のコードを、**そのまま import して**使う。
@@ -16,9 +16,11 @@ template.yaml → 検査 → 変数を埋める → 計画 → (DB に記録)→
 
 ```
 launchs-v2-template/
-  <id>/template.yaml, files/, smoke.yaml   テンプレート
-  launchs/                                  本体(git submodule。develop を指す)
-  harness/                                  この道具(別の Go モジュール。replace で ../launchs を使う)
+  templates/<id>/manifest.yaml, README.md, <版>/…   テンプレート(本体に取り込まれるのは、ここ。docs/structure.md)
+  scaffold/                                 新しいテンプレートの雛形(task new でコピー)
+  embed.go                                  templates/ を埋め込んで公開する(本体が import する)
+  harness/                                  この道具(別の Go モジュール)
+    launchs/                                本体(git submodule。develop を指す。replace で使う)
     main.go      コマンド(list/validate/plan/render/test)
     source.go    テンプレートの読み込み(本体の template.Load)
     runner.go    計画 → k8s への展開(本体の operator を呼ぶ)
@@ -55,7 +57,7 @@ launchs-v2-template/
 
 ## 各コマンドの内部
 
-- **validate**: `loadRegistry`(各フォルダの `template.yaml` と `files/` を、メモリ上のファイルシステムに写して、本体の `template.Load` に渡す)→ 全テンプレートで `buildPlan`。`launchs/` や `harness/` のように、`template.yaml` を持たないフォルダは、無視する。
+- **validate**: `loadRegistry`(各フォルダの中身を、メモリ上のファイルシステムに写して、本体の `template.Load` に渡す。版の読み込みも、ここ)→ 全テンプレートで `buildPlan`。`manifest.yaml` を持たないフォルダは、無視する。`--version x.y.z` か `--version all` で、版を選べる(既定は、最新の版)。
 - **plan**: `buildPlan` の結果を JSON で出す。
 - **render**: `client-go` の**偽のクライアント**(`fake.Clientset`、`dynamicfake`)に、`runner.apply` で作らせ、できた資源を YAML にする。
 - **test**: 本物のクラスターに、`runner.apply` で作る → Deployment ごとに、本体と同じ `DeploymentReady` で待つ → Pod の再起動を見守る → API サーバーの proxy 経由で HTTP → namespace を消す。
@@ -84,9 +86,9 @@ launchs-v2-template/
 ## 本体の版を上げるとき
 
 ```
-git submodule update --remote launchs   # 本体の develop の最新へ
+git submodule update --remote harness/launchs   # 本体の develop の最新へ
 task validate && task test              # 全テンプレートが、まだ通るか
-git add launchs && git commit
+git add harness/launchs && git commit
 ```
 
 本体の engine の仕様(新しい項目、検査の厳しさ)が変わると、既存のテンプレートが通らなくなることがある。それを、ここで先に知る。

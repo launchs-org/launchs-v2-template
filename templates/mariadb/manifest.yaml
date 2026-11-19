@@ -1,0 +1,6 @@
+# テンプレートの、版によらない情報(画面に出す名前、説明、アイコン、分類)。
+id: mariadb
+name: MariaDB
+description: データベース(MariaDB 11)。データは、ボリュームに保存されます。
+icon: database
+category: database

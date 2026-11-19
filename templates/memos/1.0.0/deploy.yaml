@@ -1,0 +1,11 @@
+# コンテナ(deploy)。
+deploys:
+  - name: memos
+    image: neosmemo/memos:stable
+    spec: small
+    replicas: 1
+    env:
+      MEMOS_MODE: prod
+    mounts:
+      - volume: data
+        path: /var/opt/memos

@@ -1,0 +1,16 @@
+# コンテナ(deploy)。
+deploys:
+  - name: web
+    image: nginx:alpine
+    spec: small
+    replicas: 1
+    configmaps:
+      - configmap: site
+        key: default.conf
+        path: /etc/nginx/conf.d/default.conf
+      - configmap: site
+        key: index.html
+        path: /usr/share/nginx/html/index.html
+      - configmap: site
+        key: favicon.gif
+        path: /usr/share/nginx/html/favicon.gif

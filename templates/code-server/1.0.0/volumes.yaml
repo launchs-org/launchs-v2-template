@@ -1,0 +1,4 @@
+# ボリューム(データを残す場所)。
+volumes:
+  - name: home
+    sizeMB: ${storage}

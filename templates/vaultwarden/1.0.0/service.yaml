@@ -1,0 +1,7 @@
+# deploy に付ける Service(クラスター内の入口。他の deploy から、DNS 名で呼べる)。
+services:
+  - deploy: vault
+    ports:
+      - name: http
+        port: 80
+        protocol: tcp

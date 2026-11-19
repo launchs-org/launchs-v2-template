@@ -1,0 +1,6 @@
+# テンプレートの、版によらない情報(画面に出す名前、説明、アイコン、分類)。
+id: gitea
+name: Gitea(Git ホスティング)
+description: 自分たちのソースコードを置いて、管理できます。GitHub のような画面で、課題管理やレビューもできます。
+icon: git
+category: dev

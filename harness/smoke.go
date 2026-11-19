@@ -17,20 +17,21 @@ type smokeSettings struct {
 	TimeoutSeconds int `json:"timeoutSeconds"`
 }
 
-// loadSmokeSettings は、テンプレートのフォルダの smoke.yaml を読む。
+// loadSmokeSettings は、テンプレートの版のフォルダの smoke.yaml を読む。
 //
 // 引数:
 //   - root: リポジトリのフォルダ。
 //   - templateID: テンプレートの id。
+//   - version: 版(x.y.z)。
 //
 // 戻り値:
 //   - 設定(ファイルが無ければ、既定の値)。
 //   - ファイルが壊れているときのエラー。
-func loadSmokeSettings(root string, templateID string) (smokeSettings, error) {
+func loadSmokeSettings(root string, templateID string, version string) (smokeSettings, error) {
 	// 既定の値から始める。
 	settings := smokeSettings{TimeoutSeconds: 300}
 	// ファイルを読む(無ければ、既定のまま)。
-	content, readError := os.ReadFile(filepath.Join(root, templateID, "smoke.yaml"))
+	content, readError := os.ReadFile(filepath.Join(root, templateID, version, "smoke.yaml"))
 	if os.IsNotExist(readError) {
 		return settings, nil
 	}

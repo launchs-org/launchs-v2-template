@@ -1,0 +1,6 @@
+# コンテナ(deploy)。
+deploys:
+  - name: board
+    image: excalidraw/excalidraw:latest
+    spec: small
+    replicas: 1

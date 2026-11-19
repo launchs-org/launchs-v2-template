@@ -1,0 +1,4 @@
+# ボリューム(データを残す場所。PVC)。sizeMB は、変数で決められる。
+volumes:
+  - name: data
+    sizeMB: ${storage}

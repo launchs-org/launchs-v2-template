@@ -1,0 +1,6 @@
+# テンプレートの、版によらない情報(画面に出す名前、説明、アイコン、分類)。
+id: redis
+name: Redis
+description: キャッシュとキューに使う、インメモリのデータストア(Redis 7)。パスワードで保護され、データは、ボリュームに保存されます。
+icon: database
+category: cache

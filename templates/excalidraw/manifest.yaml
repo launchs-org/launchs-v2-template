@@ -1,0 +1,6 @@
+# テンプレートの、版によらない情報(画面に出す名前、説明、アイコン、分類)。
+id: excalidraw
+name: Excalidraw(ホワイトボード)
+description: 手書き風の図やメモを、ブラウザで描けます。保存するデータはなく、すぐ使えます。
+icon: draw
+category: tool

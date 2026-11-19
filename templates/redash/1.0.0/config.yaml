@@ -1,0 +1,28 @@
+# 利用者が入れる値(variables)と、作成後の案内(notes)。
+notes: |
+  1. 初回の起動では、テーブルを作るので、公開 URL が開くまで 1〜2 分かかります。
+  2. 公開 URL を開くと、最初の設定画面が出ます。管理者の名前、メールアドレス、パスワード、組織の名前を入れてください。この画面は、最初に開いた人が、操作できてしまうので、作成が終わったら、すぐ、済ませてください。
+  3. データ源は、設定の「Data Sources」から足します。この Redash と同じプロジェクトの PostgreSQL などには、service の DNS 名でつなげます。
+
+variables:
+  - name: db_password
+    label: 内部のデータベースのパスワード
+    type: password
+    generate: true
+    length: 24
+  - name: cookie_secret
+    label: Cookie の秘密の文字列
+    type: password
+    generate: true
+    length: 32
+  - name: secret_key
+    label: 暗号化の秘密の文字列
+    type: password
+    generate: true
+    length: 32
+  - name: storage
+    label: データベースの大きさ(MB)
+    type: integer
+    default: "2048"
+    min: 512
+    max: 5120

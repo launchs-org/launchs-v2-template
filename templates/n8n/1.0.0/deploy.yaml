@@ -1,0 +1,17 @@
+# コンテナ(deploy)。
+deploys:
+  - name: n8n
+    image: n8nio/n8n:latest
+    spec: medium
+    replicas: 1
+    # イメージは、ユーザー 1000(node)で動く。ボリュームに書けるよう、所有グループを 1000 にする。
+    fsGroup: 1000
+    env:
+      N8N_ENCRYPTION_KEY: ${encryption_key}
+      N8N_PROXY_HOPS: "1"
+      N8N_RUNNERS_ENABLED: "true"
+      GENERIC_TIMEZONE: Asia/Tokyo
+      TZ: Asia/Tokyo
+    mounts:
+      - volume: data
+        path: /home/node/.n8n

@@ -21,28 +21,54 @@ tasks:
   setup:
     desc: 本体(launchs/ の submodule)を取り込む。最初に 1 回。
     cmds:
-      - git submodule update --init --recursive
+      - git submodule update --init harness/launchs
       - docker volume create harness-gomod >/dev/null
+
+  new:
+    desc: 雛形(scaffold/)から、新しいテンプレートを作る。例 `task new -- myapp`
+    preconditions:
+      - sh: test -n "{{.CLI_ARGS}}"
+        msg: "id を指定してください。例: task new -- myapp"
+      - sh: test ! -e templates/{{.CLI_ARGS}}
+        msg: "templates/{{.CLI_ARGS}} は、もうあります"
+    cmds:
+      - cp -r scaffold templates/{{.CLI_ARGS}}
+      - sed -i 's/__ID__/{{.CLI_ARGS}}/g' templates/{{.CLI_ARGS}}/manifest.yaml templates/{{.CLI_ARGS}}/README.md
+      - 'echo "作りました: templates/{{.CLI_ARGS}}/ を編集して、task validate -- {{.CLI_ARGS}}"'
+
+  new:version:
+    desc: 今の最新の版を、コピーして、新しい版を作る。例 `task new:version -- myapp 1.1.0`
+    vars:
+      ID: "{{index (splitList \" \" .CLI_ARGS) 0}}"
+      VERSION: "{{index (splitList \" \" .CLI_ARGS) 1}}"
+    preconditions:
+      - sh: test -d templates/{{.ID}}
+        msg: "templates/{{.ID}} がありません。使い方: task new:version -- <id> <新しい版>"
+      - sh: test ! -e templates/{{.ID}}/{{.VERSION}}
+        msg: "版 {{.VERSION}} は、もうあります"
+    cmds:
+      - cp -r "templates/{{.ID}}/$(ls templates/{{.ID}} | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)" templates/{{.ID}}/{{.VERSION}}
+      - 'echo "作りました: templates/{{.ID}}/{{.VERSION}}/。変更したら、manifest.yaml の latest と、README の「版」を更新してください"'
 
   list:
     desc: テンプレートの一覧
     cmds:
-      - "{{.HARNESS}} list --root=.."
+      - "{{.HARNESS}} list --root=../templates"
 
   validate:
     desc: 全てのテンプレートを、本番と同じエンジンで検査する(CLI_ARGS に id を指定すると、それだけ)
     cmds:
-      - "{{.HARNESS}} validate --root=.. {{.CLI_ARGS}}"
+      - "{{.HARNESS}} validate --root=../templates {{.CLI_ARGS}}"
 
   plan:
     desc: 計画(作られる資源)を出す。例 `task plan -- redash --set storage=1024`
     cmds:
-      - "{{.HARNESS}} plan --root=.. {{.CLI_ARGS}}"
+      - "{{.HARNESS}} plan --root=../templates {{.CLI_ARGS}}"
 
   render:
     desc: k8s のマニフェスト(YAML)を出す。クラスター不要。例 `task render -- redash`
     cmds:
-      - "{{.HARNESS}} render --root=.. {{.CLI_ARGS}}"
+      - "{{.HARNESS}} render --root=../templates {{.CLI_ARGS}}"
 
   cluster:up:
     desc: 試験用のクラスター(k3s を、docker のコンテナで動かす。Traefik 入り。API は 16443、HTTP は localhost:18080)を作る
@@ -72,12 +98,12 @@ tasks:
   test:
     desc: クラスターに展開して、Ready と HTTP を確かめる。例 `task test -- redash`(id が無ければ全て)
     cmds:
-      - "{{.HARNESS}} test --root=.. {{.CLI_ARGS}}"
+      - "{{.HARNESS}} test --root=../templates {{.CLI_ARGS}}"
 
   test:keep:
     desc: test の後に、namespace を消さない(中を調べたいとき。`KUBECONFIG=.kube/config kubectl get all -A`)
     cmds:
-      - "{{.HARNESS}} test --root=.. --keep {{.CLI_ARGS}}"
+      - "{{.HARNESS}} test --root=../templates --keep {{.CLI_ARGS}}"
 
   fmt:
     desc: harness を整形する

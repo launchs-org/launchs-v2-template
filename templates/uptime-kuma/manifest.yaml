@@ -1,0 +1,6 @@
+# テンプレートの、版によらない情報(画面に出す名前、説明、アイコン、分類)。
+id: uptime-kuma
+name: Uptime Kuma(死活監視)
+description: サイトやサービスが動いているかを、定期的に確かめて、止まったら知らせてくれます。状態ページも作れます。
+icon: activity
+category: monitoring

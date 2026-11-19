@@ -2,6 +2,14 @@
 
 テンプレートを足す・直すときに、**何を、どの順で、どこまで確かめるか**をまとめる。コマンドの一覧は [README](../README.md)、仕組みは [harness.md](harness.md)、うまくいかないときは [troubleshooting.md](troubleshooting.md)。
 
+## 新しいテンプレートを作る
+
+```
+task new -- myapp     # scaffold/ を、templates/myapp/ にコピー(id を置き換える)
+```
+
+雛形は、そのまま検査を通る形(web アプリ + ボリューム + 公開)。不要な部分を消し、必要な部分を足して、以下の段階で確かめる。
+
 ## 全体の流れ
 
 | 段階 | コマンド | クラスター | 時間 | 分かること |
@@ -19,11 +27,13 @@ PR の前に、**1 と 4 は必ず**通す。2・3 は、書いた内容を目�
 ```
 task validate            # 全てのテンプレート
 task validate -- redash  # 1 つだけ
+task validate -- redash --version all  # 全ての版
 ```
 
 本体(launchs)と**同じコード**で、次を確かめる。
 
-- `template.yaml` の書式(未知の項目、型、必須項目)。
+- `manifest.yaml` と、版のフォルダ(`x.y.z`)の、種類ごとのファイルの書式(未知の項目、型、必須項目、kind を書いていないか)。
+- `service.yaml` が、`deploy.yaml` にある deploy を指していること。
 - 変数: 名前、型、既定値、`min`/`max`/`pattern`/`options`、`generate`(パスワード)。
 - `${変数}` と `${service.<deploy>.dns}` の参照が、存在すること。deploy 同士の参照に、循環が無いこと。
 - volume・ConfigMap・deploy・service・ingress のつながり(存在しないボリュームをマウントしていないか、ingress が向ける deploy に service があるか、など)。
@@ -77,6 +87,7 @@ docker の中で、k3s(軽い Kubernetes。Traefik 入り)を動かす。k3d な
 task test -- redash          # 1 つ
 task test -- redash gitea    # 複数
 task test                    # 全て(30 分ほどかかる)
+task test -- redash --version all   # 全ての版
 ```
 
 テンプレートごとに、次を行う。
@@ -89,7 +100,7 @@ task test                    # 全て(30 分ほどかかる)
 
 結果は、`PASS <id>(時間)` か、`FAIL <id>` と、原因(Pod の状態、コンテナの待機・終了の理由、直近のイベント、最後の HTTP の応答)。
 
-### 4.3 テンプレートごとの調整(`<id>/smoke.yaml`)
+### 4.3 テンプレートごとの調整(`templates/<id>/smoke.yaml`)
 
 無くてもよい。次の項目だけ、書ける。
 

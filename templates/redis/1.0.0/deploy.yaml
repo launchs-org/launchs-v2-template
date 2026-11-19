@@ -1,0 +1,17 @@
+# コンテナ(deploy)。
+deploys:
+  - name: redis
+    image: redis:7
+    spec: medium
+    replicas: 1
+    command: redis-server
+    args:
+      - --requirepass
+      - ${password}
+      - --appendonly
+      - "yes"
+      - --dir
+      - /data
+    mounts:
+      - volume: data
+        path: /data

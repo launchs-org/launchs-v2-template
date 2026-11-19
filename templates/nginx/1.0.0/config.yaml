@@ -1,0 +1,16 @@
+# 利用者が入れる値(variables)と、作成後の案内(notes)。
+variables:
+  - name: title
+    label: ページの題
+    type: string
+    default: Hello, Launchs!
+    maxLength: 100
+  - name: gzip
+    label: 圧縮(gzip)
+    type: choice
+    default: "on"
+    options:
+      - value: "on"
+        label: 有効
+      - value: "off"
+        label: 無効

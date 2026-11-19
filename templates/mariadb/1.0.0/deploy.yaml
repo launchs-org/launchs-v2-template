@@ -1,0 +1,15 @@
+# コンテナ(deploy)。
+deploys:
+  - name: db
+    image: mariadb:11
+    spec: medium
+    replicas: 1
+    env:
+      MARIADB_DATABASE: ${database}
+      MARIADB_USER: ${user}
+      MARIADB_PASSWORD: ${password}
+      # root のパスワードは、ランダムに作る(利用者は、作った一般ユーザーで、つなぐ)。
+      MARIADB_RANDOM_ROOT_PASSWORD: "1"
+    mounts:
+      - volume: data
+        path: /var/lib/mysql

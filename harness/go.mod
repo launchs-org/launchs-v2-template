@@ -82,4 +82,4 @@ require (
 	sigs.k8s.io/structured-merge-diff/v6 v6.4.2 // indirect
 )
 
-replace launchs => ../launchs
+replace launchs => ./launchs

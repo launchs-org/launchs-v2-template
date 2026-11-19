@@ -1,0 +1,9 @@
+# コンテナ(deploy)。
+deploys:
+  - name: kuma
+    image: louislam/uptime-kuma:1
+    spec: medium
+    replicas: 1
+    mounts:
+      - volume: data
+        path: /app/data

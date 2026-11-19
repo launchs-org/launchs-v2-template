@@ -1,0 +1,15 @@
+# 利用者が決める値(variables)と、作成後の案内(notes)。どちらも、無くてよい。
+# notes は、作成後に、利用者に見せる。変数は ${名前} で参照できる(パスワードの変数は、伏せて表示される)。
+# 初回の設定画面が、最初に開いた人に管理者を作らせるものは、「すぐ済ませてください」と書く。
+notes: |
+  1. 公開 URL を開いてください。
+  2. (初回の設定があれば、その手順を書く)
+
+# type は string / integer / choice / password(generate: true で、自動で作る)。
+variables:
+  - name: storage
+    label: データの大きさ(MB)
+    type: integer
+    default: "1024"
+    min: 256
+    max: 5120

@@ -1,0 +1,5 @@
+# インターネットへの公開(HTTP だけ)。
+rules:
+  - path: /
+    deploy: ide
+    port: 8080

@@ -1,0 +1,6 @@
+# テンプレートの、版によらない情報(画面に出す名前、説明、アイコン、分類)。
+id: redash
+name: Redash(データの可視化)
+description: データベースに SQL で問い合わせて、グラフやダッシュボードを作れます。PostgreSQL や MySQL など、たくさんのデータ源につなげます。
+icon: chart
+category: monitoring

@@ -1,0 +1,6 @@
+# テンプレートの、版によらない情報(画面に出す名前、説明、アイコン、分類)。
+id: mailpit
+name: Mailpit(開発用のメール受信箱)
+description: 開発中のアプリが送るメールを、本物の宛先に送らずに、受け取って、画面で確認できます。
+icon: mail
+category: dev

@@ -1,0 +1,13 @@
+# コンテナ(deploy)。
+deploys:
+  - name: mailpit
+    image: axllent/mailpit:latest
+    spec: small
+    replicas: 1
+    env:
+      MP_UI_AUTH: admin:${password}
+      MP_DATABASE: /data/mailpit.db
+      MP_MAX_MESSAGES: "5000"
+    mounts:
+      - volume: data
+        path: /data

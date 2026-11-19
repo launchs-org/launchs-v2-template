@@ -1,0 +1,61 @@
+# コンテナ(deploy)。
+deploys:
+  - name: db
+    image: postgres:17-alpine
+    spec: medium
+    replicas: 1
+    env:
+      POSTGRES_DB: redash
+      POSTGRES_USER: redash
+      POSTGRES_PASSWORD: ${db_password}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    mounts:
+      - volume: dbdata
+        path: /var/lib/postgresql/data
+
+  - name: redis
+    image: redis:7-alpine
+    spec: small
+    replicas: 1
+
+  # web。テーブルを作れるまで(データベースが起動するまで)、繰り返して、作れたら起動する。
+  - name: server
+    image: redash/redash:26.9.0
+    spec: large
+    replicas: 1
+    command: /bin/sh
+    args:
+      - "-c"
+      - "until /app/bin/docker-entrypoint create_db; do echo 'データベースを待っています'; sleep 5; done; exec /app/bin/docker-entrypoint server"
+    env:
+      REDASH_DATABASE_URL: postgresql://redash:${db_password}@${service.db.dns}:5432/redash
+      REDASH_REDIS_URL: redis://${service.redis.dns}:6379/0
+      REDASH_COOKIE_SECRET: ${cookie_secret}
+      REDASH_SECRET_KEY: ${secret_key}
+      REDASH_WEB_WORKERS: "2"
+
+  - name: scheduler
+    image: redash/redash:26.9.0
+    spec: medium
+    replicas: 1
+    args: ["scheduler"]
+    env:
+      REDASH_DATABASE_URL: postgresql://redash:${db_password}@${service.db.dns}:5432/redash
+      REDASH_REDIS_URL: redis://${service.redis.dns}:6379/0
+      REDASH_COOKIE_SECRET: ${cookie_secret}
+      REDASH_SECRET_KEY: ${secret_key}
+      QUEUES: celery,scheduled_queries,schemas
+      WORKERS_COUNT: "1"
+
+  - name: worker
+    image: redash/redash:26.9.0
+    spec: medium
+    replicas: 1
+    args: ["worker"]
+    env:
+      REDASH_DATABASE_URL: postgresql://redash:${db_password}@${service.db.dns}:5432/redash
+      REDASH_REDIS_URL: redis://${service.redis.dns}:6379/0
+      REDASH_COOKIE_SECRET: ${cookie_secret}
+      REDASH_SECRET_KEY: ${secret_key}
+      QUEUES: queries,periodic,emails,default
+      WORKERS_COUNT: "2"

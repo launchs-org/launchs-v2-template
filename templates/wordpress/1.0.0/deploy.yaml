@@ -1,0 +1,28 @@
+# コンテナ(deploy)。
+deploys:
+  # web を先に書いても、db の service が先に作られる(${service.db.dns} の参照に従う)。
+  - name: web
+    image: wordpress:6
+    spec: medium
+    replicas: 1
+    env:
+      WORDPRESS_DB_HOST: ${service.db.dns}
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: ${db_password}
+    mounts:
+      - volume: content
+        path: /var/www/html/wp-content
+
+  - name: db
+    image: mariadb:11
+    spec: medium
+    replicas: 1
+    env:
+      MARIADB_DATABASE: wordpress
+      MARIADB_USER: wordpress
+      MARIADB_PASSWORD: ${db_password}
+      MARIADB_RANDOM_ROOT_PASSWORD: "1"
+    mounts:
+      - volume: dbdata
+        path: /var/lib/mysql
