@@ -1,11 +1,12 @@
 # テンプレートの開発のコマンド(go-task)。Go は手元に入れなくてよい(コンテナの中で動かす)。
-# 使うもの: docker、kubectl、go-task、git、k3d(クラスターの試験をするとき。https://k3d.io)。
+# 使うもの: docker、kubectl、go-task、git。クラスターも、docker のコンテナ(k3s)で動くので、k3d などは要らない。
 version: "3"
 
 vars:
   # harness を動かす Go のイメージ(本体の go.mod に合わせる)。
   GO_IMAGE: golang:1.27
-  # k3d のクラスターの名前と、kubeconfig の置き場。
+  # 試験用のクラスター(k3s のコンテナ)の名前と、kubeconfig の置き場。
+  K3S_IMAGE: rancher/k3s:v1.33.4-k3s1
   CLUSTER: launchs-templates
   KUBECONFIG_FILE: "{{.ROOT_DIR}}/.kube/config"
   # harness を、コンテナで動かすための、共通の docker run の頭(クラスターの API に届くよう、ホストのネットワークを使う)。
@@ -44,19 +45,28 @@ tasks:
       - "{{.HARNESS}} render --root=.. {{.CLI_ARGS}}"
 
   cluster:up:
-    desc: 試験用の k3d のクラスターを作る(Traefik 入り。HTTP は localhost:8080)
+    desc: 試験用のクラスター(k3s を、docker のコンテナで動かす。Traefik 入り。API は 16443、HTTP は localhost:18080)を作る
     status:
-      - k3d cluster list {{.CLUSTER}}
+      - docker ps --format '{{"{{"}}.Names{{"}}"}}' | grep -qx {{.CLUSTER}}
     cmds:
+      - docker rm -f {{.CLUSTER}} >/dev/null 2>&1 || true
       - mkdir -p .kube
-      - k3d cluster create {{.CLUSTER}} --agents 1 --wait -p "8080:80@loadbalancer" --kubeconfig-update-default=false
-      - k3d kubeconfig get {{.CLUSTER}} > {{.KUBECONFIG_FILE}}
-      - KUBECONFIG={{.KUBECONFIG_FILE}} kubectl wait --for=condition=Available deployment/traefik -n kube-system --timeout=180s
+      - >-
+        docker run -d --name {{.CLUSTER}} --privileged --tmpfs /run --tmpfs /var/run
+        -p 16443:6443 -p 18080:80
+        -v {{.ROOT_DIR}}/.kube:/output
+        -e K3S_KUBECONFIG_OUTPUT=/output/config -e K3S_KUBECONFIG_MODE=644
+        {{.K3S_IMAGE}} server --tls-san 127.0.0.1
+      - until [ -s .kube/config ]; do sleep 2; done
+      - sed -i 's#https://127.0.0.1:6443#https://127.0.0.1:16443#' .kube/config
+      - until KUBECONFIG={{.KUBECONFIG_FILE}} kubectl get nodes 2>/dev/null | grep -q " Ready"; do sleep 3; done
+      - until KUBECONFIG={{.KUBECONFIG_FILE}} kubectl get deployment/traefik -n kube-system >/dev/null 2>&1; do sleep 3; done
+      - KUBECONFIG={{.KUBECONFIG_FILE}} kubectl wait --for=condition=Available deployment/traefik -n kube-system --timeout=240s
 
   cluster:down:
     desc: 試験用のクラスターを消す
     cmds:
-      - k3d cluster delete {{.CLUSTER}}
+      - docker rm -f {{.CLUSTER}}
       - rm -rf .kube
 
   test:

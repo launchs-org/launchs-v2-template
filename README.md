@@ -10,7 +10,7 @@ launchs のテンプレート(よく使う構成を、変数を埋めるだけ�
 
 ## 使うもの
 
-docker、kubectl、[go-task](https://taskfile.dev)、git。クラスターの試験をするときだけ、[k3d](https://k3d.io) も。Go は、手元に入れなくてよい(コンテナの中で動く)。
+docker、kubectl、[go-task](https://taskfile.dev)、git。クラスターも、docker の中の k3s で動くので、k3d などは要らない。Go は、手元に入れなくてよい(コンテナの中で動く)。
 
 ## はじめに
 
@@ -27,7 +27,7 @@ task setup
 | `task validate [-- <id>]` | 本番と同じエンジンで、書式・変数・参照・計画を検査する(数秒。クラスター不要) |
 | `task plan -- <id> [--set 名前=値]` | 変数を埋めて、作られる資源の計画を出す |
 | `task render -- <id> [--set 名前=値]` | 本番と同じ展開コードで作られる、k8s のマニフェスト(YAML)を出す(クラスター不要) |
-| `task cluster:up` / `task cluster:down` | 試験用の k3d のクラスター(Traefik 入り)を作る/消す |
+| `task cluster:up` / `task cluster:down` | 試験用のクラスター(docker の中の k3s。Traefik 入り)を作る/消す |
 | `task test [-- <id>]` | クラスターに展開して、全ての Deployment が Ready になり、再起動せず、HTTP が返ることを確かめ、片付ける |
 | `task test:keep -- <id>` | 同じことをして、namespace を残す(中を調べたいとき) |
 
@@ -48,7 +48,7 @@ timeoutSeconds: 300   # 起動を待つ秒数(既定 300)
 
 ## 本番との違い
 
-- 本番は Talos + Longhorn、試験は k3d + local-path(RWO)。ストレージの速さや、RWX の挙動は、試験では分からない。
+- 本番は Talos + Longhorn、試験は k3s(docker の中)+ local-path(RWO)。ストレージの速さや、RWX の挙動は、試験では分からない。
 - DB や Temporal を使わない。変数の検査、計画、k8s への展開は、本体のコードをそのまま使う。
 - クォータ(アカウントごとの上限)の確認はしない。
 
