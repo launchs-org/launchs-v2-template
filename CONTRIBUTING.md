@@ -1,5 +1,7 @@
 # テンプレートを足す・直す
 
+検証の詳しい方法は [docs/verification.md](docs/verification.md)、うまくいかないときは [docs/troubleshooting.md](docs/troubleshooting.md)。
+
 ## 流れ
 
 1. このリポジトリを**フォーク**して、`feature/<テンプレートの id>` のブランチを切る。

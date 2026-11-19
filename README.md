@@ -6,6 +6,13 @@ launchs のテンプレート(よく使う構成を、変数を埋めるだけ�
 - `harness/`: 本体(launchs)と**同じエンジン**で検査し、**同じ k8s の展開のコード**で、クラスターに展開して試験する道具。
 - `launchs/`: 本体の submodule。harness が、本体のコードを、そのまま使うために置く。
 
+詳しいドキュメント:
+
+- [検証方法](docs/verification.md): 何を、どの順で、どこまで確かめるか。PR の前の確認。
+- [harness の仕組み](docs/harness.md): 本体のコードのどこを使い、何を置き換えているか。本番との違い。
+- [うまくいかないとき](docs/troubleshooting.md)
+- [テンプレートを足す・直す](CONTRIBUTING.md)
+
 仕様は、本体の `docs/templates.md`(設計)と `docs/endpoints/templates.md`(書き方)。
 
 ## 使うもの
