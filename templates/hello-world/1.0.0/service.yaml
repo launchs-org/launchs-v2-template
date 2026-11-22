@@ -1,0 +1,7 @@
+# deploy に付ける Service(クラスター内の入口)。
+services:
+  - deploy: app
+    ports:
+      - name: http
+        port: 80
+        protocol: tcp
