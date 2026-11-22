@@ -1,0 +1,6 @@
+# テンプレートの、版によらない情報(画面に出す名前、説明、アイコン、分類)。
+id: hello-world
+name: hello-world(自動デプロイの入口)
+description: 最初に置く、仮のウェブアプリです。GitHub Actions の自動デプロイを設定すると、自分のイメージに置き換わります。
+icon: git
+category: web

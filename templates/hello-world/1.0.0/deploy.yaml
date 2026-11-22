@@ -1,0 +1,6 @@
+# コンテナ(deploy)。仮のイメージ。自動デプロイで、自分のイメージに置き換わる。
+deploys:
+  - name: app
+    image: traefik/whoami:v1.10.3
+    spec: small
+    replicas: 1
